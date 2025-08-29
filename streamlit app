@@ -1,0 +1,53 @@
+import streamlit as st
+from rag_system import get_vector_store, get_llm, get_retrieval_chain
+import os
+
+# Set a title for the Streamlit app
+st.set_page_config(page_title="Healthwise RAG System :material/favorite:", layout="centered")
+
+st.title("Healthwise RAG :material/favorite:")
+st.write("Ask me questions about chronic diseases and public health guidelines.")
+
+# Check for Hugging Face API token
+if "HUGGINGFACEHUB_API_TOKEN" not in os.environ:
+    st.error("Hugging Face API token not found. Please set the environment variable 'HUGGINGFACEHUB_API_TOKEN'.")
+    st.stop()
+
+# Get the vector store and LLM, caching them for efficiency
+vector_store = get_vector_store()
+llm = get_llm()
+retrieval_chain = get_retrieval_chain(vector_store, llm)
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Accept user input
+if prompt := st.chat_input("What is a chronic disease?"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Display assistant response in chat message container
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            # Call the RAG chain to get a response
+            response = retrieval_chain.invoke({"input": prompt})
+            st.markdown(response["answer"])
+            
+            # Optional: Display the source documents
+            with st.expander("Source Documents"):
+                for doc in response["context"]:
+                    st.write(f"Source: {doc.metadata.get('source', 'N/A')}")
+                    st.write(doc.page_content)
+                    st.write("---")
+            
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
