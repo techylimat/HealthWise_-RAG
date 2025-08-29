@@ -5,11 +5,11 @@ from rag_system import get_retrieval_chain
 # --- Main Application ---
 st.set_page_config(
     page_title="Healthwise RAG",
-    page_icon="➕",
+    page_icon="⚕️",
     layout="wide",
 )
 
-st.title("➕ Healthwise RAG")
+st.title("⚕️ Healthwise RAG")
 
 # Add a description or instructions
 st.markdown(
