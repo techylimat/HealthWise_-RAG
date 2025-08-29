@@ -74,6 +74,13 @@ st.markdown("""
 st.title("Healthwise RAG ⚕️")
 st.markdown("### Your reliable source for public health information")
 
+# Add a text input for the Hugging Face API token
+api_token = st.text_input(
+    "Enter your Hugging Face API Token:", type="password", help="You can find your token in your Hugging Face settings."
+)
+if api_token:
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = api_token
+
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -92,7 +99,7 @@ try:
             if not os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
                 st.error(
                     "Error: The HUGGINGFACEHUB_API_TOKEN environment variable is not set. "
-                    "Please set it and restart the app."
+                    "Please enter your token above and click Enter."
                 )
             else:
                 st.session_state.retrieval_chain = get_retrieval_chain()
