@@ -26,20 +26,37 @@ if "messages" not in st.session_state:
 if "retrieval_chain" not in st.session_state:
     st.session_state.retrieval_chain = None
 
-# --- Setup and Error Handling ---
-with st.spinner("Setting up the RAG system... This may take a moment."):
-    try:
+# --- Setup and Error Handling with Progress Bar ---
+try:
+    with st.spinner("Setting up the RAG system..."):
+        # Faking the progress to provide user feedback
+        progress_bar = st.progress(0)
+        st.text("Step 1 of 3: Initializing model and services...")
+        progress_bar.progress(33)
+        time.sleep(0.5)
+
+        st.text("Step 2 of 3: Loading documents and creating vector store...")
+        progress_bar.progress(66)
+        time.sleep(0.5)
+
         if st.session_state.retrieval_chain is None:
             st.session_state.retrieval_chain = get_retrieval_chain()
-        st.success("System ready!")
-    except Exception as e:
-        st.error(
-            f"An error occurred during setup: {e}"
-        )
-        st.warning(
-            "Please check your environment variables, especially your Hugging Face API token, and ensure you have an active internet connection."
-        )
-        st.stop()
+
+        st.text("Step 3 of 3: System is ready to go!")
+        progress_bar.progress(100)
+        time.sleep(0.5)
+
+    st.success("System ready!")
+
+except Exception as e:
+    st.error(
+        f"An error occurred during setup: {e}"
+    )
+    st.warning(
+        "Please check your environment variables, especially your Hugging Face API token, and ensure you have an active internet connection."
+    )
+    # This will allow the error message to be displayed and then stop the application flow
+    st.stop()
 
 # --- Chat History Display ---
 for message in st.session_state.messages:
