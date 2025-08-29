@@ -121,7 +121,8 @@ try:
 
             with st.chat_message("assistant"):
                 with st.spinner("Searching for answers..."):
-                    response = retrieval_chain.invoke({"input": user_query})
+                    # Use the correct key 'query' for the retrieval chain
+                    response = retrieval_chain.invoke({"query": user_query})
                     # Check for a valid response
                     if response and "answer" in response:
                         st.markdown(response["answer"])
