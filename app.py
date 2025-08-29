@@ -6,9 +6,6 @@ import sys
 # Set the pysqlite3 path for ChromaDB
 sys.modules["sqlite3"] = sys.modules["pysqlite3"]
 
-# Disable the Streamlit file watcher to prevent the 'inotify instance limit reached' error
-st.set_option('server.watcher_type', 'none')
-
 from rag_system import get_retrieval_chain
 
 # --- UI elements ---
