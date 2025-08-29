@@ -79,7 +79,8 @@ api_token = st.text_input(
     "Enter your Hugging Face API Token:", type="password", help="You can find your token in your Hugging Face settings."
 )
 if api_token:
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = api_token
+    # Use st.session_state to store the token and trigger a rerun
+    st.session_state["HUGGINGFACEHUB_API_TOKEN"] = api_token
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -96,13 +97,14 @@ try:
         # Check if retrieval chain is already in session state
         if "retrieval_chain" not in st.session_state:
             # Check for Hugging Face token
-            if not os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
+            current_token = st.session_state.get("HUGGINGFACEHUB_API_TOKEN")
+            if not current_token:
                 st.error(
                     "Error: The HUGGINGFACEHUB_API_TOKEN environment variable is not set. "
                     "Please enter your token above and click Enter."
                 )
             else:
-                st.session_state.retrieval_chain = get_retrieval_chain()
+                st.session_state.retrieval_chain = get_retrieval_chain(current_token)
 
     # Get the retrieval chain from session state
     retrieval_chain = st.session_state.get("retrieval_chain")
