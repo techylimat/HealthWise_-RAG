@@ -4,3 +4,4 @@ langchain-community
 chromadb
 sentence-transformers
 huggingface_hub
+beautifulsoup4
