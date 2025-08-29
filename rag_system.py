@@ -2,8 +2,7 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import HuggingFaceHub
+from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
@@ -25,7 +24,7 @@ def get_vector_store(text_chunks):
     Creates a Chroma vector store from text chunks.
     """
     try:
-        embeddings = HuggingFaceEmbeddings()
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         vector_store = Chroma.from_documents(text_chunks, embedding=embeddings)
         return vector_store
     except Exception as e:
@@ -50,11 +49,10 @@ def get_retrieval_chain(huggingfacehub_api_token):
         if not vector_store:
             return None
 
-        # Pass the token to the HuggingFaceHub and specify the task
-        llm = HuggingFaceHub(
+        # Use the updated HuggingFaceEndpoint class
+        llm = HuggingFaceEndpoint(
             repo_id="google/flan-t5-xxl",
             huggingfacehub_api_token=huggingfacehub_api_token,
-            task="text2text-generation"
         )
 
         template = """You are a helpful and knowledgeable assistant specializing in public health. Your task is to provide concise and accurate answers to questions based on the provided context.
@@ -70,7 +68,7 @@ def get_retrieval_chain(huggingfacehub_api_token):
             retriever=vector_store.as_retriever(),
             return_source_documents=False,
             chain_type_kwargs={"prompt": prompt},
-            input_key="query"  # Explicitly tell the chain to use the 'query' key
+            input_key="query"
         )
         return retrieval_chain
     except Exception as e:
