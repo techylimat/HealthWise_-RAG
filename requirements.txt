@@ -3,4 +3,4 @@ streamlit
 langchain-community
 faiss-cpu
 sentence-transformers
-HuggingFaceHub
+huggingface_hub
