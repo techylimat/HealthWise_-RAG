@@ -1,0 +1,6 @@
+langchain
+streamlit
+langchain-community
+faiss-cpu
+sentence-transformers
+HuggingFaceHub
