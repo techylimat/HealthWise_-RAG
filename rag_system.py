@@ -69,7 +69,8 @@ def get_retrieval_chain(huggingfacehub_api_token):
             chain_type="stuff",
             retriever=vector_store.as_retriever(),
             return_source_documents=False,
-            chain_type_kwargs={"prompt": prompt}
+            chain_type_kwargs={"prompt": prompt},
+            input_key="query"  # Explicitly tell the chain to use the 'query' key
         )
         return retrieval_chain
     except Exception as e:
