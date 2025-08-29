@@ -6,6 +6,9 @@ from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
+# Set the USER_AGENT environment variable to identify requests to Hugging Face Hub
+os.environ["USER_AGENT"] = "healthwise-rag-app"
+
 def get_text_chunks_from_web(urls):
     """
     Loads text from a list of URLs and splits it into chunks.
