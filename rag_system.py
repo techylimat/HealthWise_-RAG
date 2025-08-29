@@ -1,72 +1,77 @@
-from langchain_community.document_loaders import WebBaseLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import PromptTemplate
-from langchain_community.llms import HuggingFaceHub
-from langchain.chains import create_retrieval_chain
 import os
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFaceHub
+from langchain.prompts import PromptTemplate
+from langchain.chains import RetrievalQA
 
-def get_vector_store():
-    # 1. Ingest documents
-    urls = [
-        "https://www.who.int/news-room/fact-sheets/detail/the-top-10-causes-of-death",
-        "https://www.who.int/health-topics/chronic-diseases",
-        "https://www.cdc.gov/chronicdisease/about/index.htm"
-    ]
-    loader = WebBaseLoader(urls)
-    docs = loader.load()
-    
-    # 2. Split documents into chunks
-    text_splitter = RecursiveCharacterTextSplitter()
-    chunks = text_splitter.split_documents(docs)
-    
-    # 3. Create embeddings
-    # We'll use a local, open-source model for embeddings
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
-    )
-    
-    # 4. Create vector store using ChromaDB
-    vector_store = Chroma.from_documents(chunks, embeddings)
-    return vector_store
-
-def get_llm():
-    # Use HuggingFaceHub for the LLM
-    llm = HuggingFaceHub(
-        repo_id="google/flan-t5-xxl",
-        model_kwargs={"temperature": 0.5, "max_length": 64}
-    )
-    return llm
-
-def get_retrieval_chain():
-    # 1. Get the vector store and LLM
-    vector_store = get_vector_store()
-    llm = get_llm()
-    retriever = vector_store.as_retriever()
-
-    # 2. Define the prompt template
-    prompt_template = """
-    You are a helpful assistant.
-    Answer the user's question based on the following context.
-    If you don't know the answer, just say that you don't know.
-    
-    Context:
-    {context}
-    
-    Question:
-    {input}
+def get_text_chunks_from_web(urls):
     """
-    
-    prompt = PromptTemplate(
-        input_variables=["context", "input"],
-        template=prompt_template
-    )
+    Loads text from a list of URLs and splits it into chunks.
+    """
+    try:
+        loader = WebBaseLoader(urls)
+        documents = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        return text_splitter.split_documents(documents)
+    except Exception as e:
+        print(f"Error loading and splitting documents: {e}")
+        return []
 
-    # 3. Create the document chain and the retrieval chain
-    document_chain = create_stuff_documents_chain(llm, prompt)
-    retrieval_chain = create_retrieval_chain(retriever, document_chain)
-    
-    return retrieval_chain
+def get_vector_store(text_chunks):
+    """
+    Creates a Chroma vector store from text chunks.
+    """
+    try:
+        embeddings = HuggingFaceEmbeddings()
+        vector_store = Chroma.from_documents(text_chunks, embedding=embeddings)
+        return vector_store
+    except Exception as e:
+        print(f"Error creating vector store: {e}")
+        return None
+
+def get_retrieval_chain(huggingfacehub_api_token):
+    """
+    Creates and returns a RetrievalQA chain.
+    """
+    try:
+        urls = [
+            "https://www.who.int/health-topics/diabetes",
+            "https://www.who.int/news-room/fact-sheets/detail/diabetes",
+            "https://en.wikipedia.org/wiki/Diabetes"
+        ]
+        text_chunks = get_text_chunks_from_web(urls)
+        if not text_chunks:
+            return None
+
+        vector_store = get_vector_store(text_chunks)
+        if not vector_store:
+            return None
+
+        # Pass the token to the HuggingFaceHub and specify the task
+        llm = HuggingFaceHub(
+            repo_id="google/flan-t5-xxl",
+            huggingfacehub_api_token=huggingfacehub_api_token,
+            task="text2text-generation"
+        )
+
+        template = """You are a helpful and knowledgeable assistant specializing in public health. Your task is to provide concise and accurate answers to questions based on the provided context.
+        If the answer is not contained in the context, say "Sorry, I couldn't find a relevant answer in the provided documents."
+        Context: {context}
+        Question: {question}
+        Answer:"""
+        prompt = PromptTemplate.from_template(template)
+
+        retrieval_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",
+            retriever=vector_store.as_retriever(),
+            return_source_documents=False,
+            chain_type_kwargs={"prompt": prompt}
+        )
+        return retrieval_chain
+    except Exception as e:
+        print(f"An error occurred during retrieval chain setup: {e}")
+        return None
