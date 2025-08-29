@@ -1,130 +1,129 @@
 import streamlit as st
-import time
+import os
+
+# This is a patch to ensure the correct sqlite3 version is used
+# for chromadb compatibility. It must be at the very top of the script.
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from rag_system import get_retrieval_chain
 
-# Custom CSS for a beautiful and coherent theme
-st.markdown(
-    """
-    <style>
-    .reportview-container {
-        background: #f0f2f6;
-    }
-    .main-header {
-        color: #007bff;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        font-size: 3em;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .st-emotion-cache-18ni7ap.ezrtsby2 {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-    }
-    .st-emotion-cache-1c19b6.ezrtsby2 {
-        background-color: #e9ecef;
-        border-radius: 10px;
-    }
-    .st-emotion-cache-1p6f2r4.ezrtsby2 {
-        border-radius: 10px;
-    }
-    .st-emotion-cache-1627l4p.e1tzp5d2 {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .st-emotion-cache-1w0l7e4.e1f1d6gn4 {
-        border-radius: 10px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# --- Main Application ---
+# --- Set page configuration for a beautiful UI ---
 st.set_page_config(
     page_title="Healthwise RAG",
     page_icon="⚕️",
-    layout="wide",
+    layout="centered",
 )
 
-st.title("⚕️ Healthwise RAG")
+# Custom CSS for a beautiful, clean UI
+st.markdown("""
+<style>
+    /* Main container and title styling */
+    .stApp {
+        background-color: #f0f2f6;
+        color: #1f2937;
+    }
+    .st-emotion-cache-12ms92i {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
 
-# Add a description or instructions
-st.markdown(
-    """
-    **Ask a question about chronic diseases or public health.**
-    
-    _This system uses a Retrieval-Augmented Generation (RAG) model to find relevant information from trusted sources and provide a grounded, accurate answer._
-    """
-)
+    /* Streamlit chat message styling */
+    .st-emotion-cache-1c7y2c1 { /* User message container */
+        background-color: #d1fae5;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .st-emotion-cache-1ch051d { /* Assistant message container */
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
 
-# --- Initialize Session State ---
+    /* Title and header styling */
+    h1 {
+        color: #0b9389;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    h3 {
+        color: #4b5563;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        text-align: center;
+        margin-top: 0;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Set page title and header
+st.title("Healthwise RAG ⚕️")
+st.markdown("### Your reliable source for public health information")
+
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "retrieval_chain" not in st.session_state:
-    st.session_state.retrieval_chain = None
 
-# --- Setup and Error Handling with Progress Bar ---
-try:
-    with st.spinner("Setting up the RAG system..."):
-        # Faking the progress to provide user feedback
-        progress_bar = st.progress(0)
-        st.text("Step 1 of 3: Initializing model and services...")
-        progress_bar.progress(33)
-        time.sleep(0.5)
-
-        st.text("Step 2 of 3: Loading documents and creating vector store...")
-        progress_bar.progress(66)
-        time.sleep(0.5)
-
-        if st.session_state.retrieval_chain is None:
-            st.session_state.retrieval_chain = get_retrieval_chain()
-
-        st.text("Step 3 of 3: System is ready to go!")
-        progress_bar.progress(100)
-        time.sleep(0.5)
-
-    st.success("System ready!")
-
-except Exception as e:
-    st.error(
-        f"An error occurred during setup: {e}"
-    )
-    st.warning(
-        "Please check your environment variables, especially your Hugging Face API token, and ensure you have an active internet connection."
-    )
-    # This will allow the error message to be displayed and then stop the application flow
-    st.stop()
-
-# --- Chat History Display ---
+# Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- Chat Input Handler ---
-if prompt := st.chat_input("Ask a question..."):
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# --- Main application logic ---
+try:
+    with st.spinner('Preparing the knowledge base...'):
+        # Check if retrieval chain is already in session state
+        if "retrieval_chain" not in st.session_state:
+            # Check for Hugging Face token
+            if not os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
+                st.error(
+                    "Error: The HUGGINGFACEHUB_API_TOKEN environment variable is not set. "
+                    "Please set it and restart the app."
+                )
+                st.stop()
+            st.session_state.retrieval_chain = get_retrieval_chain()
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        
-        # Use a Streamlit-friendly streaming method
-        response_generator = st.session_state.retrieval_chain.stream({"input": prompt})
+    # Get the retrieval chain from session state
+    retrieval_chain = st.session_state.retrieval_chain
 
-        for chunk in response_generator:
-            if isinstance(chunk, str):
-                full_response += chunk
-            elif isinstance(chunk, dict) and "answer" in chunk:
-                full_response += chunk["answer"]
+    # Accept user input
+    if user_query := st.chat_input("Ask a question about public health..."):
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": user_query})
+        # Display user message in chat message container
+        with st.chat_message("user"):
+            st.markdown(user_query)
 
-            time.sleep(0.01) # Simulate typing for better user experience
-            message_placeholder.markdown(full_response + "▌")
-        
-        message_placeholder.markdown(full_response)
-        
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        with st.chat_message("assistant"):
+            with st.spinner("Searching for answers..."):
+                response = retrieval_chain.invoke({"input": user_query})
+                # Check for a valid response
+                if response and "answer" in response:
+                    st.markdown(response["answer"])
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response["answer"]}
+                    )
+                else:
+                    st.warning("Sorry, I could not find a relevant answer.")
+
+except Exception as e:
+    # Display a user-friendly error message
+    st.error(f"An error occurred during setup: {e}")
+    st.warning(
+        "Please check your environment variables, especially your Hugging Face API token, "
+        "and ensure you have an active internet connection."
+    )
