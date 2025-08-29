@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import pysqlite3 as sqlite3
 import sys
+import traceback
 
 # Set the pysqlite3 path for ChromaDB
 sys.modules["sqlite3"] = sys.modules["pysqlite3"]
@@ -102,15 +103,19 @@ try:
             with st.chat_message("assistant"):
                 with st.spinner("Searching for answers..."):
                     try:
+                        print("DEBUG: Attempting to invoke retrieval chain...")
                         response = st.session_state.retrieval_chain.invoke({"query": prompt})
                         result = response.get("result", "Sorry, I could not find an answer.")
                         st.markdown(result)
                         # Add assistant response to chat history
                         st.session_state.messages.append({"role": "assistant", "content": result})
+                        print("DEBUG: Response generation successful.")
                     except Exception as e:
                         error_message = f"An error occurred during response generation: {e}"
                         st.error(error_message)
                         st.session_state.messages.append({"role": "assistant", "content": error_message})
+                        print("DEBUG: An error occurred during response generation.")
+                        print(traceback.format_exc()) # This will print the full traceback to the console
             
 except Exception as e:
     st.error(f"An error occurred during app execution: {e}")
