@@ -2,6 +2,45 @@ import streamlit as st
 import time
 from rag_system import get_retrieval_chain
 
+# Custom CSS for a beautiful and coherent theme
+st.markdown(
+    """
+    <style>
+    .reportview-container {
+        background: #f0f2f6;
+    }
+    .main-header {
+        color: #007bff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 3em;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .st-emotion-cache-18ni7ap.ezrtsby2 {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+    .st-emotion-cache-1c19b6.ezrtsby2 {
+        background-color: #e9ecef;
+        border-radius: 10px;
+    }
+    .st-emotion-cache-1p6f2r4.ezrtsby2 {
+        border-radius: 10px;
+    }
+    .st-emotion-cache-1627l4p.e1tzp5d2 {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .st-emotion-cache-1w0l7e4.e1f1d6gn4 {
+        border-radius: 10px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # --- Main Application ---
 st.set_page_config(
     page_title="Healthwise RAG",
