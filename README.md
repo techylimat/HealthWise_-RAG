@@ -1,78 +1,106 @@
-# HealthWise_-RAG
-RAG System: Public Health Q&A
+"""
+This script contains the content for the project's README file.
+"""
+
+README_CONTENT = """# RAG System: Public Health Q&A
+
 This project is a simple Retrieval-Augmented Generation (RAG) system built to answer questions about chronic diseases and public health, using authoritative sources like the CDC and WHO. It demonstrates the core principles of document ingestion, vector indexing, retrieval, and grounded generation.
 
 The final application is a user-friendly web interface built with Streamlit.
 
-Chosen Tech Stack
-Framework: LangChain in Python
+### Chosen Tech Stack
 
-User Interface: Streamlit
+* **Framework:** LangChain in Python
 
-Document Loader: WebBaseLoader
+* **User Interface:** Streamlit
 
-Text Splitter: RecursiveCharacterTextSplitter
+* **Document Loader:** `WebBaseLoader`
 
-Embedding Model: sentence-transformers/all-MiniLM-L6-v2
+* **Text Splitter:** `RecursiveCharacterTextSplitter`
 
-Vector Store: FAISS
+* **Embedding Model:** `sentence-transformers/all-MiniLM-L6-v2`
 
-LLM: google/flan-t5-xxl from Hugging Face
+* **Vector Store:** FAISS
 
-Project Files
-rag_system.py: Contains all the core logic, including document processing, vector store creation, and the RAG chain.
+* **LLM:** `google/flan-t5-xxl` from Hugging Face
 
-app.py: The Streamlit application that handles the user interface and interacts with rag_system.py.
+### Project Files
 
-requirements.txt: A list of all necessary Python libraries.
+* `rag_system.py`: Contains all the core logic, including document processing, vector store creation, and the RAG chain.
 
-Setup Instructions
-Clone the Repository:
+* `app.py`: The Streamlit application that handles the user interface and interacts with `rag_system.py`.
 
-git clone <your-repo-url>
-cd <your-repo-name>
+* `requirements.txt`: A list of all necessary Python libraries.
 
-Set Up a Virtual Environment (Recommended):
+### Setup Instructions
 
-python -m venv venv
-source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+1. **Clone the Repository:**
 
-Install Dependencies:
+   ```
+   git clone <your-repo-url>
+   cd <your-repo-name>
+   
+   ```
 
-pip install -r requirements.txt
+2. **Set Up a Virtual Environment (Recommended):**
 
-Get a Hugging Face API Token:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   
+   ```
 
-Sign up for a free account on Hugging Face.
+3. **Install Dependencies:**
 
-Go to "Settings" -> "Access Tokens" and create a new token.
+   ```
+   pip install -r requirements.txt
+   
+   ```
 
-Copy the token.
+4. **Get a Hugging Face API Token:**
 
-Set the API Token as an Environment Variable:
+   * Sign up for a free account on [Hugging Face](https://huggingface.co/settings/tokens).
 
-export HUGGINGFACEHUB_API_TOKEN="hf_..."
+   * Go to "Settings" -> "Access Tokens" and create a new token.
 
-On Windows, use set HUGGINGFACEHUB_API_TOKEN="hf_..."
+   * Copy the token.
 
-Run the Streamlit Application:
+5. **Set the API Token as an Environment Variable:**
 
-streamlit run app.py
+   ```
+   export HUGGINGFACEHUB_API_TOKEN="hf_..."
+   
+   ```
 
-Your web browser should automatically open the application.
+   * On Windows, use `set HUGGINGFACEHUB_API_TOKEN="hf_..."`
 
-Example Queries
-"What are the major chronic diseases?"
+6. **Run the Streamlit Application:**
 
-"How can chronic diseases be prevented?"
+   ```
+   streamlit run app.py
+   
+   ```
 
-"What is a non-communicable disease?"
+   Your web browser should automatically open the application.
 
-"Give me some key facts about chronic diseases."
+### Example Queries
 
-Known Issues & Limitations
-API Token: The application requires a Hugging Face API token to function.
+* "What are the major chronic diseases?"
 
-Document Scope: The system's knowledge is limited to the documents from the CDC and WHO URLs defined in rag_system.py.
+* "How can chronic diseases be prevented?"
 
-Generative Model: The google/flan-t5-xxl model is a general-purpose LLM. For more accurate and specific medical advice, a specialized LLM would be required. This is for demonstration purposes only and should not be used for medical advice.
+* "What is a non-communicable disease?"
+
+* "Give me some key facts about chronic diseases."
+
+### Known Issues & Limitations
+
+* **API Token:** The application requires a Hugging Face API token to function.
+
+* **Document Scope:** The system's knowledge is limited to the documents from the CDC and WHO URLs defined in `rag_system.py`.
+
+* **Generative Model:** The `google/flan-t5-xxl` model is a general-purpose LLM. For more accurate and specific medical advice, a specialized LLM would be required. This is for demonstration purposes only and should not be used for medical advice.
+"""
+
+if __name__ == "__main__":
+    print(README_CONTENT)
