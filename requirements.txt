@@ -1,6 +1,6 @@
 langchain
 streamlit
 langchain-community
-faiss-cpu
+chromadb
 sentence-transformers
 huggingface_hub
