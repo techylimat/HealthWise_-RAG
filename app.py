@@ -94,31 +94,33 @@ try:
                     "Error: The HUGGINGFACEHUB_API_TOKEN environment variable is not set. "
                     "Please set it and restart the app."
                 )
-                st.stop()
-            st.session_state.retrieval_chain = get_retrieval_chain()
+            else:
+                st.session_state.retrieval_chain = get_retrieval_chain()
 
     # Get the retrieval chain from session state
-    retrieval_chain = st.session_state.retrieval_chain
+    retrieval_chain = st.session_state.get("retrieval_chain")
 
-    # Accept user input
-    if user_query := st.chat_input("Ask a question about public health..."):
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": user_query})
-        # Display user message in chat message container
-        with st.chat_message("user"):
-            st.markdown(user_query)
+    # Only proceed if the retrieval chain has been successfully initialized
+    if retrieval_chain:
+        # Accept user input
+        if user_query := st.chat_input("Ask a question about public health..."):
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": user_query})
+            # Display user message in chat message container
+            with st.chat_message("user"):
+                st.markdown(user_query)
 
-        with st.chat_message("assistant"):
-            with st.spinner("Searching for answers..."):
-                response = retrieval_chain.invoke({"input": user_query})
-                # Check for a valid response
-                if response and "answer" in response:
-                    st.markdown(response["answer"])
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": response["answer"]}
-                    )
-                else:
-                    st.warning("Sorry, I could not find a relevant answer.")
+            with st.chat_message("assistant"):
+                with st.spinner("Searching for answers..."):
+                    response = retrieval_chain.invoke({"input": user_query})
+                    # Check for a valid response
+                    if response and "answer" in response:
+                        st.markdown(response["answer"])
+                        st.session_state.messages.append(
+                            {"role": "assistant", "content": response["answer"]}
+                        )
+                    else:
+                        st.warning("Sorry, I could not find a relevant answer.")
 
 except Exception as e:
     # Display a user-friendly error message
