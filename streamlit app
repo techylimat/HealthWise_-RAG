@@ -1,53 +1,74 @@
 import streamlit as st
-from rag_system import get_vector_store, get_llm, get_retrieval_chain
-import os
+import time
+from rag_system import get_retrieval_chain
 
-# Set a title for the Streamlit app
-st.set_page_config(page_title="Healthwise RAG System :material/favorite:", layout="centered")
+# --- Main Application ---
+st.set_page_config(
+    page_title="Healthwise RAG",
+    page_icon="➕",
+    layout="wide",
+)
 
-st.title("Healthwise RAG :material/favorite:")
-st.write("Ask me questions about chronic diseases and public health guidelines.")
+st.title("➕ Healthwise RAG")
 
-# Check for Hugging Face API token
-if "HUGGINGFACEHUB_API_TOKEN" not in os.environ:
-    st.error("Hugging Face API token not found. Please set the environment variable 'HUGGINGFACEHUB_API_TOKEN'.")
-    st.stop()
+# Add a description or instructions
+st.markdown(
+    """
+    **Ask a question about chronic diseases or public health.**
+    
+    _This system uses a Retrieval-Augmented Generation (RAG) model to find relevant information from trusted sources and provide a grounded, accurate answer._
+    """
+)
 
-# Get the vector store and LLM, caching them for efficiency
-vector_store = get_vector_store()
-llm = get_llm()
-retrieval_chain = get_retrieval_chain(vector_store, llm)
-
-# Initialize chat history
+# --- Initialize Session State ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "retrieval_chain" not in st.session_state:
+    st.session_state.retrieval_chain = None
 
-# Display chat messages from history on app rerun
+# --- Setup and Error Handling ---
+with st.spinner("Setting up the RAG system... This may take a moment."):
+    try:
+        if st.session_state.retrieval_chain is None:
+            st.session_state.retrieval_chain = get_retrieval_chain()
+        st.success("System ready!")
+    except Exception as e:
+        st.error(
+            f"An error occurred during setup: {e}"
+        )
+        st.warning(
+            "Please check your environment variables, especially your Hugging Face API token, and ensure you have an active internet connection."
+        )
+        st.stop()
+
+# --- Chat History Display ---
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Accept user input
-if prompt := st.chat_input("What is a chronic disease?"):
+# --- Chat Input Handler ---
+if prompt := st.chat_input("Ask a question..."):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Display assistant response in chat message container
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            # Call the RAG chain to get a response
-            response = retrieval_chain.invoke({"input": prompt})
-            st.markdown(response["answer"])
-            
-            # Optional: Display the source documents
-            with st.expander("Source Documents"):
-                for doc in response["context"]:
-                    st.write(f"Source: {doc.metadata.get('source', 'N/A')}")
-                    st.write(doc.page_content)
-                    st.write("---")
-            
-    # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        # Use a Streamlit-friendly streaming method
+        response_generator = st.session_state.retrieval_chain.stream({"input": prompt})
+
+        for chunk in response_generator:
+            if isinstance(chunk, str):
+                full_response += chunk
+            elif isinstance(chunk, dict) and "answer" in chunk:
+                full_response += chunk["answer"]
+
+            time.sleep(0.01) # Simulate typing for better user experience
+            message_placeholder.markdown(full_response + "▌")
+        
+        message_placeholder.markdown(full_response)
+        
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
