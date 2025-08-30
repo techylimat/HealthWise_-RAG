@@ -3,9 +3,11 @@ import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
+from langchain_community.llms import HuggingFacePipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 # Set the USER_AGENT environment variable to identify requests to Hugging Face Hub
 os.environ["USER_AGENT"] = "healthwise-rag-app"
@@ -65,9 +67,26 @@ def get_retrieval_chain():
             return None
             
         print("DEBUG: Initializing LLM...")
-        # Using a free, publicly available LLM model that does not require an API token
-        llm = HuggingFaceEndpoint(repo_id="google/flan-t5-small")
-        print("DEBUG: LLM initialized successfully.")
+        try:
+            # Using a locally run model to avoid API issues
+            model_name = "google/flan-t5-base"
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name)
+            
+            pipe = pipeline(
+                "text-generation",
+                model=model,
+                tokenizer=tokenizer,
+                max_new_tokens=256,
+                temperature=0.7,
+                do_sample=True,
+            )
+            
+            llm = HuggingFacePipeline(pipeline=pipe)
+            print("DEBUG: LLM initialized successfully.")
+        except Exception as e:
+            print(f"DEBUG: Failed to initialize LLM: {e}")
+            return None
 
         template = """You are a helpful and knowledgeable assistant specializing in public health. Your task is to provide concise and accurate answers to questions based on the provided context.
         If the answer is not contained in the context, say "Sorry, I couldn't find a relevant answer in the provided documents."
