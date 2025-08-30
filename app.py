@@ -86,8 +86,8 @@ try:
         # Ensure retrieval chain is available before proceeding
         if st.session_state.retrieval_chain is None:
             with st.chat_message("assistant"):
-                st.error("RAG system not initialized. Please try again.")
-            st.session_state.messages.append({"role": "assistant", "content": "RAG system not initialized. Please try again."})
+                st.error("LLM connection failed. Please try again later.")
+            st.session_state.messages.append({"role": "assistant", "content": "LLM connection failed. Please try again later."})
         else:
             with st.chat_message("assistant"):
                 with st.spinner("Searching for answers..."):
