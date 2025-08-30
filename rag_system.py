@@ -15,18 +15,18 @@ def get_text_chunks_from_web(urls):
     Loads text from a list of URLs and splits it into chunks.
     """
     try:
-        print("Starting to load documents from the web...")
+        print("DEBUG: Starting to load documents from the web...")
         loader = WebBaseLoader(urls)
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = text_splitter.split_documents(documents)
-        print("Documents loaded and split into chunks successfully.")
+        print("DEBUG: Documents loaded and split into chunks successfully.")
         return chunks
     except requests.exceptions.ConnectionError as e:
-        print(f"Connection Error: Please check your internet connection or URL validity. Details: {e}")
+        print(f"DEBUG: Connection Error: Please check your internet connection or URL validity. Details: {e}")
         return []
     except Exception as e:
-        print(f"Error loading and splitting documents: {e}")
+        print(f"DEBUG: Error loading and splitting documents: {e}")
         return []
 
 def get_vector_store(text_chunks):
@@ -34,13 +34,13 @@ def get_vector_store(text_chunks):
     Creates a Chroma vector store from text chunks.
     """
     try:
-        print("Creating vector store...")
+        print("DEBUG: Creating vector store...")
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         vector_store = Chroma.from_documents(text_chunks, embedding=embeddings)
-        print("Vector store created successfully.")
+        print("DEBUG: Vector store created successfully.")
         return vector_store
     except Exception as e:
-        print(f"Error creating vector store: {e}")
+        print(f"DEBUG: Error creating vector store: {e}")
         return None
 
 def get_retrieval_chain(huggingfacehub_api_token):
@@ -48,7 +48,7 @@ def get_retrieval_chain(huggingfacehub_api_token):
     Creates and returns a RetrievalQA chain.
     """
     try:
-        print("Setting up the retrieval chain...")
+        print("DEBUG: Setting up the retrieval chain...")
         urls = [
             "https://www.who.int/health-topics/diabetes",
             "https://www.who.int/news-room/fact-sheets/detail/diabetes",
@@ -56,20 +56,21 @@ def get_retrieval_chain(huggingfacehub_api_token):
         ]
         text_chunks = get_text_chunks_from_web(urls)
         if not text_chunks:
-            print("Failed to get text chunks. Aborting setup.")
+            print("DEBUG: Failed to get text chunks. Aborting setup.")
             return None
 
         vector_store = get_vector_store(text_chunks)
         if not vector_store:
-            print("Failed to create vector store. Aborting setup.")
+            print("DEBUG: Failed to create vector store. Aborting setup.")
             return None
             
-        print("Initializing LLM...")
+        print("DEBUG: Initializing LLM...")
+        # Using a free, publicly available LLM model
         llm = HuggingFaceEndpoint(
-            repo_id="google/flan-t5-xxl",
+            repo_id="mistralai/Mistral-7B-Instruct-v0.2",
             huggingfacehub_api_token=huggingfacehub_api_token,
         )
-        print("LLM initialized successfully.")
+        print("DEBUG: LLM initialized successfully.")
 
         template = """You are a helpful and knowledgeable assistant specializing in public health. Your task is to provide concise and accurate answers to questions based on the provided context.
         If the answer is not contained in the context, say "Sorry, I couldn't find a relevant answer in the provided documents."
@@ -86,8 +87,8 @@ def get_retrieval_chain(huggingfacehub_api_token):
             chain_type_kwargs={"prompt": prompt},
             input_key="query"
         )
-        print("Retrieval chain setup complete. The app is ready to answer questions.")
+        print("DEBUG: Retrieval chain setup complete. The app is ready to answer questions.")
         return retrieval_chain
     except Exception as e:
-        print(f"An error occurred during retrieval chain setup: {e}")
+        print(f"DEBUG: An error occurred during retrieval chain setup: {e}")
         return None
