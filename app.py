@@ -10,7 +10,7 @@ sys.modules["sqlite3"] = sys.modules["pysqlite3"]
 from rag_system import get_retrieval_chain
 
 # --- UI elements ---
-st.set_page_config(page_title="Healthwise RAG ⚕️", page_icon="⚕️")
+st.set_page_config(page_title=" ⚕️Healthwise RAG ", layout="wide")
 
 # Custom CSS for a beautiful UI
 st.markdown("""
@@ -55,10 +55,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Healthwise RAG ⚕️")
-st.write("Your reliable source for public health information.")
-
-
 # --- Session State ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -67,8 +63,20 @@ if "retrieval_chain" not in st.session_state:
 
 # --- Main Logic ---
 try:
+    # Acknowledge that the pattern is for a different app type but we'll adapt the structure
+    st.sidebar.title("Healthwise RAG ⚕️")
+    st.sidebar.write("Your reliable source for public health information.")
+
     if st.session_state.retrieval_chain is None:
-        st.session_state.retrieval_chain = get_retrieval_chain()
+        with st.sidebar:
+            with st.spinner("⏳ Setting up RAG system..."):
+                st.session_state.retrieval_chain = get_retrieval_chain()
+        if st.session_state.retrieval_chain is None:
+            st.error("RAG system failed to initialize. Please check the logs.")
+        else:
+            st.sidebar.success("✅ RAG system is ready!")
+
+    st.header("💬 Ask a question")
 
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
@@ -94,7 +102,7 @@ try:
                     try:
                         print("DEBUG: Attempting to invoke retrieval chain...")
                         response = st.session_state.retrieval_chain.invoke({"query": prompt})
-                        result = response.get("result", "Sorry, I could not find an answer.")
+                        result = response.get("result", "Sorry, I could not find a relevant answer.")
                         st.markdown(result)
                         # Add assistant response to chat history
                         st.session_state.messages.append({"role": "assistant", "content": result})
