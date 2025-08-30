@@ -58,17 +58,9 @@ st.markdown("""
 st.title("Healthwise RAG ⚕️")
 st.write("Your reliable source for public health information.")
 
-# --- API Key Input ---
-huggingfacehub_api_token = st.sidebar.text_input(
-    "Hugging Face API Token",
-    type="password",
-    help="Enter your Hugging Face API token with access to google/flan-t5-xxl"
-)
-if not huggingfacehub_api_token:
-    st.warning("Please enter your Hugging Face API token in the sidebar to begin.")
-    st.stop()
-else:
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = huggingfacehub_api_token
+# The API token is no longer required for this model
+# huggingfacehub_api_token = st.sidebar.text_input(...)
+huggingfacehub_api_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 # --- Session State ---
 if "messages" not in st.session_state:
