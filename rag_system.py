@@ -43,7 +43,7 @@ def get_vector_store(text_chunks):
         print(f"DEBUG: Error creating vector store: {e}")
         return None
 
-def get_retrieval_chain(huggingfacehub_api_token):
+def get_retrieval_chain():
     """
     Creates and returns a RetrievalQA chain.
     """
@@ -65,11 +65,8 @@ def get_retrieval_chain(huggingfacehub_api_token):
             return None
             
         print("DEBUG: Initializing LLM...")
-        # Using a free, publicly available LLM model
-        llm = HuggingFaceEndpoint(
-            repo_id="mistralai/Mistral-7B-Instruct-v0.2",
-            huggingfacehub_api_token=huggingfacehub_api_token,
-        )
+        # Using a free, publicly available LLM model that does not require an API token
+        llm = HuggingFaceEndpoint(repo_id="google/flan-t5-small")
         print("DEBUG: LLM initialized successfully.")
 
         template = """You are a helpful and knowledgeable assistant specializing in public health. Your task is to provide concise and accurate answers to questions based on the provided context.
