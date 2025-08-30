@@ -58,9 +58,6 @@ st.markdown("""
 st.title("Healthwise RAG ⚕️")
 st.write("Your reliable source for public health information.")
 
-# The API token is no longer required for this model
-# huggingfacehub_api_token = st.sidebar.text_input(...)
-huggingfacehub_api_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 # --- Session State ---
 if "messages" not in st.session_state:
@@ -71,7 +68,7 @@ if "retrieval_chain" not in st.session_state:
 # --- Main Logic ---
 try:
     if st.session_state.retrieval_chain is None:
-        st.session_state.retrieval_chain = get_retrieval_chain(huggingfacehub_api_token)
+        st.session_state.retrieval_chain = get_retrieval_chain()
 
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
@@ -89,8 +86,8 @@ try:
         # Ensure retrieval chain is available before proceeding
         if st.session_state.retrieval_chain is None:
             with st.chat_message("assistant"):
-                st.error("RAG system not initialized. Please check your API token and try again.")
-            st.session_state.messages.append({"role": "assistant", "content": "RAG system not initialized. Please check your API token and try again."})
+                st.error("RAG system not initialized. Please try again.")
+            st.session_state.messages.append({"role": "assistant", "content": "RAG system not initialized. Please try again."})
         else:
             with st.chat_message("assistant"):
                 with st.spinner("Searching for answers..."):
