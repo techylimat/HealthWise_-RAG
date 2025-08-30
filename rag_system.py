@@ -7,7 +7,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_community.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, AutoModelForSeq2SeqLM
 
 # Set the USER_AGENT environment variable to identify requests to Hugging Face Hub
 os.environ["USER_AGENT"] = "healthwise-rag-app"
@@ -71,15 +71,16 @@ def get_retrieval_chain():
             # Using a locally run model to avoid API issues
             model_name = "google/flan-t5-base"
             tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForCausalLM.from_pretrained(model_name)
+            # Use AutoModelForSeq2SeqLM for the T5 model
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
             
             pipe = pipeline(
-                "text-generation",
+                "text2text-generation",
                 model=model,
                 tokenizer=tokenizer,
-                max_new_tokens=256,
+                max_length=256,
                 temperature=0.7,
-                do_sample=True,
+                do_sample=False,
             )
             
             llm = HuggingFacePipeline(pipeline=pipe)
